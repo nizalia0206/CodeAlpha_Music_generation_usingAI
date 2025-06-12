@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🎵 AI Music Generator</title>
+  <script src="https://cdn.jsdelivr.net/npm/tone@latest/build/Tone.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      padding: 50px;
+      background: linear-gradient(135deg, #9b59b6, #e91e63);
+      color: #fff;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 30px;
+    }
+    h1 {
+      font-weight: 700;
+      text-shadow: 0 0 8px rgba(255 255 255 / 0.6);
+    }
+    select {
+      font-size: 18px;
+      padding: 10px 15px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      color: black; /* black text */
+      background: rgba(255 255 255 / 0.9);
+      cursor: pointer;
+      min-width: 200px;
+    }
+    button {
+      padding: 14px 28px;
+      font-size: 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background: #ff4da6;
+      color: white;
+      box-shadow: 0 4px 10px rgba(255 77 166, 0.7);
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background: #e0338d;
+    }
+    #message {
+      font-size: 20px;
+      min-height: 30px;
+      font-weight: 600;
+      text-shadow: 0 0 5px rgba(0,0,0,0.4);
+      margin-top: 10px;
+      color: #ffe6f0;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎵 AI Music Generator</h1>
+
+  <select id="genreSelect" aria-label="Select music genre">
+    <option value="" disabled selected>Select a genre</option>
+    <option value="pop">Pop</option>
+    <option value="rock">Rock</option>
+    <option value="electronic">Electronic</option>
+    <option value="hiphop">Hip-Hop</option>
+    <option value="reggae">Reggae</option>
+  </select>
+
+  <button onclick="generateAndPlay()">Generate & Play Music</button>
+
+  <div id="message" role="status" aria-live="polite"></div>
+
+  <script>
+    async function generateAndPlay() {
+      const select = document.getElementById('genreSelect');
+      const genre = select.value;
+      const message = document.getElementById('message');
+
+      if (!genre) {
+        message.textContent = 'Please select a genre to generate music.';
+        return;
+      }
+
+      message.textContent = `Generating some cool ${genre} vibes... 🎶`;
+
+      // Stop and clear existing sounds
+      Tone.Transport.stop();
+      Tone.Transport.cancel();
+      if (window.synth) window.synth.dispose();
+      if (window.pattern) window.pattern.dispose();
+
+      let synth, pattern;
+
+      switch (genre) {
+        case 'pop':
+          synth = new Tone.Synth().toDestination();
+          pattern = new Tone.Pattern((time, note) => {
+            synth.triggerAttackRelease(note, '8n', time);
+          }, ['C4', 'E4', 'G4', 'B4'], 'upDown');
+          break;
+
+        case 'rock':
+          synth = new Tone.MembraneSynth().toDestination();
+          pattern = new Tone.Pattern((time, note) => {
+            synth.triggerAttackRelease(note, '16n', time);
+          }, ['C2', 'C3', 'G2', 'G3'], 'random');
+          break;
+
+        case 'jazz':
+          synth = new Tone.FMSynth({
+            modulationIndex: 12.22,
+            envelope: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 1 }
+          }).toDestination();
+          pattern = new Tone.Pattern((time, note) => {
+            synth.triggerAttackRelease(note, '8n', time);
+          }, ['D4', 'F4', 'A4', 'C5'], 'alternate');
+          break;
+
+        case 'electronic':
+          synth = new Tone.MonoSynth({
+            oscillator: { type: 'square' },
+            envelope: { attack: 0.05, decay: 0.1, sustain: 0.3, release: 0.8 }
+          }).toDestination();
+          pattern = new Tone.Pattern((time, note) => {
+            synth.triggerAttackRelease(note, '8n', time);
+          }, ['C5', 'D#5', 'F#5', 'A#5'], 'random');
+          break;
+
+        case 'hiphop':
+          synth = new Tone.MembraneSynth().toDestination();
+          pattern = new Tone.Pattern((time, note) => {
+            synth.triggerAttackRelease(note, '4n', time);
+          }, ['C2', 'D2', 'F2', 'G2'], 'up');
+          break;
+
+        case 'classical':
+          synth = new Tone.Sampler({
+            urls: {
+              'A4': 'A4.mp3',
+              'C5': 'C5.mp3',
+              'E5': 'E5.mp3'
+            },
+            baseUrl: "https://tonejs.github.io/audio/casio/"
+          }).toDestination();
+          pattern = new Tone.Pattern((time, note) => {
+            synth.triggerAttackRelease(note, '4n', time);
+          }, ['C4', 'E4', 'G4', 'B4'], 'upDown');
+          break;
+
+        case 'reggae':
+          synth = new Tone.MembraneSynth().toDestination();
+          pattern = new Tone.Pattern((time, note) => {
+            synth.triggerAttackRelease(note, '8n', time);
+          }, ['G3', 'B3', 'D4', 'F4'], 'down');
+          break;
+
+        default:
+          message.textContent = 'Genre not supported yet!';
+          return;
+      }
+
+      window.synth = synth;
+      window.pattern = pattern;
+
+      pattern.start(0);
+      Tone.Transport.start();
+
+      if(window.stopTimer) clearTimeout(window.stopTimer);
+
+      window.stopTimer = setTimeout(() => {
+        pattern.stop();
+        Tone.Transport.stop();
+        message.textContent = '';
+      }, 15000);
+    }
+  </script>
+
+</body>
+</html>
